@@ -9,7 +9,9 @@ import {
   CreditCard,
   ChevronRight,
   CheckCircle,
-  Menu
+  Menu,
+  MessageCircle,
+  Mail
 } from 'lucide-react'
 
 export default function Home() {
@@ -266,9 +268,44 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {/* 6. SECTION CONTACT */}
+        <section id="contact" className="bg-white py-24 sm:py-32 border-t border-slate-100">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:text-center">
+              <h2 className="text-base font-semibold leading-7 text-indigo-600">Contactez-nous</h2>
+              <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                Une question ? Besoin d&apos;aide ?
+              </p>
+              <p className="mt-6 text-lg leading-8 text-slate-600">
+                L&apos;équipe SUGU est à votre disposition pour vous accompagner dans la réussite de votre commerce.
+              </p>
+              <div className="mt-10 flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-12">
+                <div className="flex flex-col items-center p-8 bg-slate-50 rounded-3xl w-full sm:w-72 shadow-sm ring-1 ring-slate-200 hover:-translate-y-1 transition-transform">
+                  <div className="h-12 w-12 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366] mb-4">
+                    <MessageCircle className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">WhatsApp</h3>
+                  <a href="https://wa.me/22383362944" target="_blank" rel="noopener noreferrer" className="mt-2 text-indigo-600 font-semibold hover:underline">
+                    +223 83 36 29 44
+                  </a>
+                </div>
+                <div className="flex flex-col items-center p-8 bg-slate-50 rounded-3xl w-full sm:w-72 shadow-sm ring-1 ring-slate-200 hover:-translate-y-1 transition-transform">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
+                    <Mail className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Email</h3>
+                  <a href="mailto:koudjomawugnayajohnson@gmail.com" className="mt-2 text-indigo-600 font-semibold hover:underline text-center break-all">
+                    koudjomawugnayajohnson<br />@gmail.com
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
-      {/* 6. FOOTER */}
+      {/* 7. FOOTER */}
       <footer className="bg-white border-t border-slate-200">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
