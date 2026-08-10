@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User, X, LogOut } from 'lucide-react'
+import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User, X, LogOut, Wallet } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 
@@ -50,6 +50,47 @@ export default function PosPage() {
   
   // État du dernier reçu pour impression
   const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null)
+  
+  // =========================================
+  // GESTION DES DÉPENSES
+  // =========================================
+  const [showExpenseModal, setShowExpenseModal] = useState(false)
+  const [expenseAmount, setExpenseAmount] = useState('')
+  const [expenseDescription, setExpenseDescription] = useState('')
+  const [isSubmittingExpense, setIsSubmittingExpense] = useState(false)
+
+  const handleExpenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!expenseAmount || !expenseDescription) return
+    setIsSubmittingExpense(true)
+    
+    try {
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Number(expenseAmount),
+          description: expenseDescription,
+          cashierName
+        })
+      })
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de l\'enregistrement')
+      }
+      
+      alert("✅ Dépense enregistrée avec succès !")
+      setShowExpenseModal(false)
+      setExpenseAmount('')
+      setExpenseDescription('')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue"
+      alert(`❌ ${message}`)
+    } finally {
+      setIsSubmittingExpense(false)
+    }
+  }
   
   // =========================================
   // VERROUILLAGE DE LA CAISSE (PIN)
@@ -442,6 +483,61 @@ export default function PosPage() {
   return (
     <>
       {/* =========================================
+          MODALE DÉPENSE
+          ========================================= */}
+      {showExpenseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm print:hidden">
+          <div className="bg-white p-8 rounded-3xl shadow-2xl relative w-full max-w-md">
+            <button 
+              onClick={() => setShowExpenseModal(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-orange-100 p-3 rounded-xl text-orange-600">
+                <Wallet className="w-6 h-6" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Sortie de Caisse</h2>
+            </div>
+            
+            <form onSubmit={handleExpenseSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Montant (F CFA)</label>
+                <input 
+                  type="number" 
+                  required
+                  min="1"
+                  value={expenseAmount}
+                  onChange={(e) => setExpenseAmount(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none text-gray-900"
+                  placeholder="Ex: 5000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Motif de la dépense</label>
+                <input 
+                  type="text" 
+                  required
+                  value={expenseDescription}
+                  onChange={(e) => setExpenseDescription(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all outline-none text-gray-900"
+                  placeholder="Ex: Paiement livreur, achat eau..."
+                />
+              </div>
+              <button 
+                type="submit"
+                disabled={isSubmittingExpense || !expenseAmount || !expenseDescription}
+                className="w-full mt-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-orange-500/30 transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmittingExpense ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer la Dépense'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================
           MODALE DÉROGATION (OVERRIDE)
           ========================================= */}
       {showOverrideModal && (
@@ -540,6 +636,10 @@ export default function PosPage() {
                 <LogOut className="h-6 w-6" />
               </button>
             )}
+
+            <button onClick={() => setShowExpenseModal(true)} className="p-3 text-orange-500 hover:text-orange-700 hover:bg-orange-50 rounded-xl transition-colors" title="Sortie de Caisse (Dépense)">
+              <Wallet className="h-6 w-6" />
+            </button>
             
             <div className="relative flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">

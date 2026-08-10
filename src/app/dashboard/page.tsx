@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { DollarSign, ShoppingCart, TrendingUp, AlertCircle, Package, Clock, CreditCard, User, Loader2, Activity } from "lucide-react"
+import { DollarSign, ShoppingCart, AlertCircle, Package, Clock, CreditCard, User, Loader2, Activity, ArrowDownRight, Wallet } from "lucide-react"
 import { createClient } from "@/utils/supabase/client"
 
 type Order = {
@@ -20,8 +20,9 @@ type Product = {
 
 export default function DashboardPage() {
   const [totalRevenue, setTotalRevenue] = useState(0)
+  const [totalExpenses, setTotalExpenses] = useState(0)
   const [totalOrders, setTotalOrders] = useState(0)
-  const [averageCart, setAverageCart] = useState(0)
+  
   const [recentOrders, setRecentOrders] = useState<Order[]>([])
   const [stockAlerts, setStockAlerts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -32,7 +33,6 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoading(true)
       
-      // On calcule minuit aujourd'hui pour filtrer les commandes
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const todayISO = today.toISOString()
@@ -49,13 +49,21 @@ export default function DashboardPage() {
           const revenue = ordersData.reduce((acc, order) => acc + Number(order.total_amount), 0)
           setTotalRevenue(revenue)
           setTotalOrders(ordersData.length)
-          setAverageCart(ordersData.length > 0 ? revenue / ordersData.length : 0)
-          
-          // Prendre les 10 dernières commandes pour le flux d'activité
           setRecentOrders(ordersData.slice(0, 10))
         }
 
-        // 2. Fetch Stock Alerts
+        // 2. Fetch Today's Expenses
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('amount')
+          .gte('created_at', todayISO)
+
+        if (!expensesError && expensesData) {
+          const expensesSum = expensesData.reduce((acc, exp) => acc + Number(exp.amount), 0)
+          setTotalExpenses(expensesSum)
+        }
+
+        // 3. Fetch Stock Alerts
         const { data: stockData, error: stockError } = await supabase
           .from('products')
           .select('id, name, stock_quantity')
@@ -91,6 +99,8 @@ export default function DashboardPage() {
     return method
   }
 
+  const netBalance = totalRevenue - totalExpenses
+
   return (
     <div className="p-8 w-full bg-gray-50 min-h-screen">
       <div className="mb-8">
@@ -99,51 +109,68 @@ export default function DashboardPage() {
       </div>
 
       {/* SECTION 1: KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Carte 1 : Chiffre d'Affaires */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        {/* Carte 1 : Ventes Brutes */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-transform hover:-translate-y-1 duration-200">
           <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
             <DollarSign size={28} />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Chiffre d'Affaires (Aujourd'hui)</p>
+            <p className="text-sm text-gray-500 font-medium">Ventes Brutes</p>
             {isLoading ? (
               <Loader2 className="h-7 w-7 animate-spin text-blue-500 mt-1" />
             ) : (
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
             )}
           </div>
         </div>
 
-        {/* Carte 2 : Ventes */}
+        {/* Carte 2 : Dépenses */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-transform hover:-translate-y-1 duration-200">
-          <div className="p-4 bg-green-50 text-green-600 rounded-xl">
+          <div className="p-4 bg-red-50 text-red-600 rounded-xl">
+            <ArrowDownRight size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Dépenses (Sorties)</p>
+            {isLoading ? (
+              <Loader2 className="h-7 w-7 animate-spin text-red-500 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Carte 3 : Solde Net en Caisse */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-transform hover:-translate-y-1 duration-200">
+          <div className="p-4 bg-emerald-50 text-emerald-600 rounded-xl">
+            <Wallet size={28} />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500 font-medium">Solde Net Caisse</p>
+            {isLoading ? (
+              <Loader2 className="h-7 w-7 animate-spin text-emerald-500 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold text-emerald-600">{formatCurrency(netBalance)}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Carte 4 : Ventes du jour (Nombre) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-transform hover:-translate-y-1 duration-200">
+          <div className="p-4 bg-purple-50 text-purple-600 rounded-xl">
             <ShoppingCart size={28} />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Ventes (Aujourd'hui)</p>
+            <p className="text-sm text-gray-500 font-medium">Nombre de Tickets</p>
             {isLoading ? (
-              <Loader2 className="h-7 w-7 animate-spin text-green-500 mt-1" />
+              <Loader2 className="h-7 w-7 animate-spin text-purple-500 mt-1" />
             ) : (
-              <p className="text-3xl font-bold text-gray-900">{totalOrders}</p>
+              <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
             )}
           </div>
         </div>
 
-        {/* Carte 3 : Panier Moyen */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4 transition-transform hover:-translate-y-1 duration-200">
-          <div className="p-4 bg-purple-50 text-purple-600 rounded-xl">
-            <TrendingUp size={28} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium">Panier Moyen</p>
-            {isLoading ? (
-              <Loader2 className="h-7 w-7 animate-spin text-purple-500 mt-1" />
-            ) : (
-              <p className="text-3xl font-bold text-gray-900">{formatCurrency(Math.round(averageCart))}</p>
-            )}
-          </div>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
