@@ -63,25 +63,20 @@ export default function CashiersPage() {
 
     setIsAdding(true)
     try {
-      // 1. Obtenir le tenant_id via la fonction sécurisée RPC
-      const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id');
+      // Appel à la route API dédiée pour contourner les blocages RLS du client
+      const response = await fetch('/api/cashiers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: name.trim(), pinCode: pin }),
+      })
 
-      if (tenantError || !tenantId) {
-        throw new Error("Erreur critique : Impossible de récupérer l'identifiant de la boutique via RPC.");
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de la création du caissier')
       }
-
-      // 2. Insérer le caissier en précisant explicitement le tenant_id
-      const { error: insertError } = await supabase
-        .from('cashiers')
-        .insert([
-          {
-            tenant_id: tenantId,
-            name: name.trim(),
-            pin_code: pin
-          }
-        ])
-
-      if (insertError) throw insertError
 
       // Succès
       setName('')
