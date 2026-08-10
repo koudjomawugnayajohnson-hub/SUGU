@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { createAdminClient } from '@/utils/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function GET() {
   try {
@@ -17,7 +17,10 @@ export async function GET() {
       return NextResponse.json({ error: "Tenant introuvable" }, { status: 400 })
     }
 
-    const supabaseAdmin = createAdminClient()
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     const { data: tenant, error } = await supabaseAdmin
       .from('tenants')
       .select('name, address, phone, tax_rate')
@@ -53,7 +56,10 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { name, address, phone, tax_rate } = body
 
-    const supabaseAdmin = createAdminClient()
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
     const { error } = await supabaseAdmin
       .from('tenants')
       .update({
