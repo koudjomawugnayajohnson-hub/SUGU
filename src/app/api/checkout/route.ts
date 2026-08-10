@@ -15,8 +15,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // 2. Extract tenant_id from app_metadata (injected by the custom_access_token_hook)
-    const tenantId = user.app_metadata?.tenant_id
+    // We use getSession() to read the JWT claims, because the Custom Access Token Hook
+    // injects the tenant_id into the JWT, NOT into the auth.users database table.
+    const { data: { session } } = await supabase.auth.getSession()
+    const tenantId = session?.user?.app_metadata?.tenant_id
 
     if (!tenantId) {
       return NextResponse.json(
