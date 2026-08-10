@@ -70,7 +70,7 @@ export default function Home() {
                 href="/login" 
                 className="group flex h-12 items-center justify-center gap-2 rounded-full bg-indigo-600 px-8 text-sm font-semibold text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-xl transition-all active:scale-95 w-full sm:w-auto"
               >
-                Démarrer l'essai gratuit
+                Démarrer l&apos;essai gratuit
                 <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <a 
@@ -102,7 +102,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-semibold leading-7 text-slate-900">Zéro fuite financière</h3>
                   <p className="mt-4 flex-auto text-base leading-7 text-slate-600">
-                    Suivez chaque entrée et sortie d'argent au franc près. Fini les écarts de caisse inexpliqués.
+                    Suivez chaque entrée et sortie d&apos;argent au franc près. Fini les écarts de caisse inexpliqués.
                   </p>
                 </div>
                 {/* Carte 2 */}
@@ -122,7 +122,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-xl font-semibold leading-7 text-slate-900">Vision claire</h3>
                   <p className="mt-4 flex-auto text-base leading-7 text-slate-600">
-                    Prenez des décisions basées sur des chiffres réels avec un tableau de bord qui résume votre journée en un clin d'œil.
+                    Prenez des décisions basées sur des chiffres réels avec un tableau de bord qui résume votre journée en un clin d&apos;œil.
                   </p>
                 </div>
               </div>
@@ -200,7 +200,7 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">Rapports Financiers</h3>
-                    <p className="mt-2 text-slate-600 leading-relaxed">Suivi du chiffre d'affaires, calcul du panier moyen et gestion intégrée des dépenses (sorties de caisse).</p>
+                    <p className="mt-2 text-slate-600 leading-relaxed">Suivi du chiffre d&apos;affaires, calcul du panier moyen et gestion intégrée des dépenses (sorties de caisse).</p>
                   </div>
                 </div>
               </div>
