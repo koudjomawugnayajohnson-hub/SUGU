@@ -65,17 +65,21 @@ export default function CashiersPage() {
     try {
       // 1. Récupérer l'utilisateur connecté
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user?.email) throw new Error("Vous n'êtes pas connecté.")
+      if (!user?.id) throw new Error("Vous n'êtes pas connecté.")
 
-      // 2. Chercher le tenant_id de cet utilisateur dans la table users
+      // 2. Chercher le tenant_id de cet utilisateur dans la table users (par ID, plus fiable que l'email)
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('tenant_id')
-        .eq('email', user.email)
+        .eq('id', user.id)
         .single()
 
-      if (userError || !userData?.tenant_id) {
-        throw new Error("Impossible de trouver votre identifiant de locataire (tenant_id).")
+      if (userError) {
+        console.error("Erreur SELECT users:", userError);
+        throw new Error(`Erreur DB: ${userError.message}`);
+      }
+      if (!userData?.tenant_id) {
+        throw new Error("Impossible de trouver votre identifiant de locataire (tenant_id).");
       }
 
       const tenantId = userData.tenant_id
