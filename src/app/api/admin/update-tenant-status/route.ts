@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       .eq('email', user.email)
       .single()
 
-    if ((adminError || !admin) && user.email !== 'koudjomawugnayajohnson@gmail.com') {
+    if ((adminError || !admin) && user.email?.toLowerCase() !== 'koudjomawugnayajohnson@gmail.com') {
       return NextResponse.json(
         { error: 'Accès refusé. Droits administrateur requis.' },
         { status: 403 }

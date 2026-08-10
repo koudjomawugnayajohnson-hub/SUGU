@@ -27,7 +27,7 @@ export default async function SuperAdminPage() {
     .eq('email', user.email)
     .single()
 
-  if (!admin && user.email !== 'koudjomawugnayajohnson@gmail.com') {
+  if (!admin && user.email?.toLowerCase() !== 'koudjomawugnayajohnson@gmail.com') {
     // S'il n'est pas admin et n'est pas l'email principal, on le renvoie
     redirect('/')
   }
