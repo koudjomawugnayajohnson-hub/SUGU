@@ -27,10 +27,20 @@ export default function ProductsPage() {
 
   const supabase = createClient()
 
-  useEffect(() => {
-    checkSessionAndFetch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const fetchProducts = async () => {
+    setIsLoading(true)
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error("Erreur lors de la récupération des produits:", error)
+    } else if (data) {
+      setProducts(data)
+    }
+    setIsLoading(false)
+  }
 
   const checkSessionAndFetch = async () => {
     try {
@@ -49,20 +59,11 @@ export default function ProductsPage() {
     }
   }
 
-  const fetchProducts = async () => {
-    setIsLoading(true)
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name', { ascending: true })
+  useEffect(() => {
+    checkSessionAndFetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-    if (error) {
-      console.error("Erreur lors de la récupération des produits:", error)
-    } else if (data) {
-      setProducts(data)
-    }
-    setIsLoading(false)
-  }
 
   const openModal = (product?: Product) => {
     if (product) {
@@ -288,7 +289,7 @@ export default function ProductsPage() {
                       onChange={e => setFormData({...formData, track_stock: e.target.checked})}
                       className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
                     />
-                    <span className="text-sm font-semibold text-gray-700">Suivre l'inventaire</span>
+                    <span className="text-sm font-semibold text-gray-700">Suivre l&apos;inventaire</span>
                   </label>
                 </div>
               </div>

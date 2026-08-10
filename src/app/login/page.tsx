@@ -41,7 +41,7 @@ export default function LoginPage() {
             Espace Propriétaire
           </h2>
           <p className="mt-3 text-sm text-gray-500">
-            Connectez-vous pour gérer votre SaaS. Seule l'authentification Google est autorisée.
+            Connectez-vous pour gérer votre SaaS. Seule l&apos;authentification Google est autorisée.
           </p>
         </div>
 

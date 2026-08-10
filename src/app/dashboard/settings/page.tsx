@@ -12,9 +12,6 @@ export default function SettingsPage() {
   
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [tenantId, setTenantId] = useState<string | null>(null)
-
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchSettings = async () => {

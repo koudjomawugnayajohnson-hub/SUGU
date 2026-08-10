@@ -82,6 +82,7 @@ export default function DashboardPage() {
       }
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchData()
   }, [])
 
@@ -105,7 +106,7 @@ export default function DashboardPage() {
     <div className="p-8 w-full bg-gray-50 min-h-screen">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-        <p className="text-gray-500 mt-1">Vos performances d'aujourd'hui en un coup d'œil.</p>
+        <p className="text-gray-500 mt-1">Vos performances d&apos;aujourd&apos;hui en un coup d&apos;œil.</p>
       </div>
 
       {/* SECTION 1: KPIs */}
@@ -188,7 +189,7 @@ export default function DashboardPage() {
               </div>
             ) : recentOrders.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-gray-400">
-                <p>Aucune vente enregistrée aujourd'hui.</p>
+                <p>Aucune vente enregistrée aujourd&apos;hui.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">

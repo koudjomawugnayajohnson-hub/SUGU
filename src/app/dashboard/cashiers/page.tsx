@@ -35,6 +35,7 @@ export default function CashiersPage() {
       
       if (!response.ok) throw new Error(result.error)
       setCashiers(result.data || [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Erreur de chargement:', err)
       setError('Impossible de charger les caissiers.')
@@ -44,6 +45,7 @@ export default function CashiersPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks
     fetchCashiers()
   }, [])
 
@@ -82,6 +84,7 @@ export default function CashiersPage() {
       setName('')
       setPin('')
       fetchCashiers()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Erreur lors de l\'ajout:', err)
       setError(err.message || 'Une erreur est survenue lors de l\'ajout.')
@@ -103,6 +106,7 @@ export default function CashiersPage() {
       if (!response.ok) throw new Error(result.error)
 
       setCashiers(cashiers.filter(c => c.id !== id))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Erreur lors de la suppression:', err)
       alert('Impossible de supprimer ce caissier.')
@@ -187,7 +191,7 @@ export default function CashiersPage() {
                 className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-4 rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2"
               >
                 {isAdding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                Créer l'accès
+                Créer l&apos;accès
               </button>
             </form>
           </div>
