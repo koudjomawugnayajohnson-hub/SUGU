@@ -76,18 +76,15 @@ export default function PosPage() {
     setIsVerifying(true)
     
     try {
-      const { data, error } = await supabase
-        .from('cashiers')
-        .select('name')
-        .eq('pin_code', pin)
-        .single()
+      const { data: cashierName, error } = await supabase
+        .rpc('verify_pin', { p_pin: pin })
         
-      if (error || !data) {
+      if (error || !cashierName) {
         throw new Error('Code PIN invalide')
       }
       
       // Succès
-      setCashierName(data.name)
+      setCashierName(cashierName)
       setIsLocked(false)
       setPin('')
     } catch (err) {
