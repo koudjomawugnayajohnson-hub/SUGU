@@ -11,9 +11,9 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const tenantId = user.app_metadata?.tenant_id
+    const { data: tenantId, error: rpcError } = await supabase.rpc('get_my_tenant_id')
 
-    if (!tenantId) {
+    if (rpcError || !tenantId) {
       return NextResponse.json({ error: "Tenant introuvable" }, { status: 400 })
     }
 
@@ -44,9 +44,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 })
     }
 
-    const tenantId = user.app_metadata?.tenant_id
+    const { data: tenantId, error: rpcError } = await supabase.rpc('get_my_tenant_id')
 
-    if (!tenantId) {
+    if (rpcError || !tenantId) {
       return NextResponse.json({ error: "Tenant introuvable" }, { status: 400 })
     }
 
