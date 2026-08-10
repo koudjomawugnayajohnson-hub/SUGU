@@ -63,18 +63,33 @@ export default function CashiersPage() {
 
     setIsAdding(true)
     try {
-      // 1. Obtenir le tenant_id de manière sécurisée (contourne le problème de JWT)
-      const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id')
-      if (tenantError || !tenantId) throw new Error('Impossible de vérifier votre accès locataire.')
+      // 1. Récupérer l'utilisateur connecté
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) throw new Error("Vous n'êtes pas connecté.")
 
-      // 2. Insérer le caissier
+      // 2. Chercher le tenant_id de cet utilisateur dans la table users
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('tenant_id')
+        .eq('email', user.email)
+        .single()
+
+      if (userError || !userData?.tenant_id) {
+        throw new Error("Impossible de trouver votre identifiant de locataire (tenant_id).")
+      }
+
+      const tenantId = userData.tenant_id
+
+      // 3. Insérer le caissier en précisant explicitement le tenant_id
       const { error: insertError } = await supabase
         .from('cashiers')
-        .insert({
-          tenant_id: tenantId,
-          name: name.trim(),
-          pin_code: pin
-        })
+        .insert([
+          {
+            tenant_id: tenantId,
+            name: name.trim(),
+            pin_code: pin
+          }
+        ])
 
       if (insertError) throw insertError
 
