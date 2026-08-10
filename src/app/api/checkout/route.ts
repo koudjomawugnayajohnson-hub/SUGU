@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
   try {
@@ -47,8 +48,13 @@ export async function POST(request: Request) {
     // 4. Generate order ID on the server
     const orderId = crypto.randomUUID()
 
-    // 5. Insert the order
-    const { error: orderError } = await supabase
+    // 5. Insert the order using Admin Client to bypass any RLS on inserts for cashiers
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
         id: orderId,
@@ -78,21 +84,38 @@ export async function POST(request: Request) {
       subtotal: item.product.price * item.quantity
     }))
 
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await supabaseAdmin
       .from('order_items')
       .insert(orderItems)
 
     if (itemsError) {
       console.error('Erreur insertion lignes:', itemsError)
       // Attempt to clean up the order if items fail
-      await supabase.from('orders').delete().eq('id', orderId)
+      await supabaseAdmin.from('orders').delete().eq('id', orderId)
       return NextResponse.json(
         { error: `Erreur lors de l'ajout des articles: ${itemsError.message}` },
         { status: 500 }
       )
     }
 
-    // 7. Success
+    // 7. Update stock
+    for (const item of cart) {
+      const { data: productData, error: productError } = await supabaseAdmin
+        .from('products')
+        .select('track_stock, stock_quantity')
+        .eq('id', item.product.id)
+        .single()
+
+      if (!productError && productData?.track_stock) {
+        const newStock = Math.max(0, (productData.stock_quantity || 0) - item.quantity)
+        await supabaseAdmin
+          .from('products')
+          .update({ stock_quantity: newStock })
+          .eq('id', item.product.id)
+      }
+    }
+
+    // 8. Success
     return NextResponse.json({
       success: true,
       orderId,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User } from 'lucide-react'
+import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User, X } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 
@@ -12,6 +12,8 @@ type Product = {
   price: number
   acronym?: string
   color?: string
+  track_stock?: boolean
+  stock_quantity?: number
 }
 
 type CartItem = {
@@ -57,7 +59,64 @@ export default function PosPage() {
   const [pinError, setPinError] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [cashierName, setCashierName] = useState<string | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<'ESPECES' | 'ORANGE_MONEY'>('ESPECES')
 
+  // =========================================
+  // DÉROGATION MANAGÉRIALE (OVERRIDE)
+  // =========================================
+  const [showOverrideModal, setShowOverrideModal] = useState(false)
+  const [overridePin, setOverridePin] = useState('')
+  const [isOverrideGranted, setIsOverrideGranted] = useState(false)
+  const [isOverrideVerifying, setIsOverrideVerifying] = useState(false)
+  const [overrideError, setOverrideError] = useState(false)
+
+  const handleOverrideInput = (num: string) => {
+    if (overridePin.length < 4) {
+      setOverridePin(prev => prev + num)
+      setOverrideError(false)
+    }
+  }
+
+  const handleOverrideClear = () => {
+    setOverridePin('')
+    setOverrideError(false)
+  }
+
+  const handleOverrideSubmit = async () => {
+    if (overridePin.length !== 4) return
+    setIsOverrideVerifying(true)
+    
+    try {
+      const response = await fetch('/api/verify-master-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: overridePin })
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        setIsOverrideGranted(true)
+        setShowOverrideModal(false)
+        setOverridePin('')
+        // On relance la fonction de checkout automatiquement
+        handleCheckout()
+      } else {
+        setOverrideError(true)
+        setTimeout(() => {
+          setOverridePin('')
+          setOverrideError(false)
+        }, 500)
+      }
+    } catch (err) {
+      setOverrideError(true)
+      setTimeout(() => {
+        setOverridePin('')
+        setOverrideError(false)
+      }, 500)
+    } finally {
+      setIsOverrideVerifying(false)
+    }
+  }
   const handlePinInput = (num: string) => {
     if (pin.length < 4) {
       setPin(prev => prev + num)
@@ -208,6 +267,17 @@ export default function PosPage() {
       return
     }
 
+    // Vérification du stock
+    const hasStockConflict = cart.some(item => 
+      item.product.track_stock && item.quantity > (item.product.stock_quantity || 0)
+    )
+
+    if (hasStockConflict && !isOverrideGranted) {
+      alert("⚠️ Stock insuffisant pour un ou plusieurs articles. Une dérogation est requise.")
+      setShowOverrideModal(true)
+      return
+    }
+
     setIsCheckingOut(true)
 
     try {
@@ -221,7 +291,7 @@ export default function PosPage() {
             quantity: item.quantity
           })),
           total,
-          paymentMethod: 'CASH',
+          paymentMethod,
           cashierName
         })
       })
@@ -242,7 +312,17 @@ export default function PosPage() {
         orderId: data.orderId
       })
 
+      // Mettre à jour le stock localement pour éviter de recharger la page
+      setProducts(prevProducts => prevProducts.map(p => {
+        const cartItem = cart.find(item => item.product.id === p.id)
+        if (cartItem && p.track_stock) {
+          return { ...p, stock_quantity: Math.max(0, (p.stock_quantity || 0) - cartItem.quantity) }
+        }
+        return p
+      }))
+
       setCart([])
+      setIsOverrideGranted(false) // Réinitialiser la dérogation pour la prochaine vente
       if (typeof window !== 'undefined') {
         localStorage.removeItem('sugu_offline_cart')
       }
@@ -343,6 +423,86 @@ export default function PosPage() {
 
   return (
     <>
+      {/* =========================================
+          MODALE DÉROGATION (OVERRIDE)
+          ========================================= */}
+      {showOverrideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm print:hidden">
+          <div className="flex flex-col items-center bg-slate-900 p-8 sm:p-12 rounded-3xl shadow-2xl border border-white/10 relative">
+            
+            <button 
+              onClick={() => { setShowOverrideModal(false); setOverridePin(''); setOverrideError(false); }}
+              className="absolute top-6 right-6 text-slate-400 hover:text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="bg-red-500 p-4 rounded-full mb-6 shadow-lg shadow-red-500/30">
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">Dérogation requise</h2>
+            <p className="text-slate-300 text-sm mb-8 text-center max-w-xs">Code Propriétaire (Master PIN) requis pour autoriser la vente hors stock.</p>
+            
+            {/* Affichage du code PIN */}
+            <div className="flex gap-4 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all duration-200 ${
+                    i < overridePin.length 
+                      ? (overrideError ? 'bg-red-500 border-red-500' : 'bg-red-500 border-red-500 shadow-md shadow-red-500/50') 
+                      : (overrideError ? 'border-red-500' : 'border-slate-500')
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="h-6 mb-6 -mt-6 flex items-center justify-center w-full">
+              {overrideError && <p className="text-red-400 font-medium text-sm animate-pulse">Code invalide</p>}
+            </div>
+
+            {/* Pavé Numérique */}
+            <div className="grid grid-cols-3 gap-4 sm:gap-6">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => handleOverrideInput(num.toString())}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-3xl font-semibold transition-colors flex items-center justify-center shadow-sm"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                onClick={handleOverrideClear}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/5 hover:bg-white/15 active:bg-red-500/40 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+              >
+                <Delete className="w-8 h-8" />
+              </button>
+              <button
+                onClick={() => handleOverrideInput('0')}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-3xl font-semibold transition-colors flex items-center justify-center shadow-sm"
+              >
+                0
+              </button>
+              <button
+                onClick={handleOverrideSubmit}
+                disabled={overridePin.length < 4 || isOverrideVerifying}
+                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all ${
+                  overridePin.length === 4 && !isOverrideVerifying
+                    ? 'bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-lg shadow-red-600/40' 
+                    : 'bg-white/5 text-white/20 cursor-not-allowed'
+                }`}
+              >
+                {isOverrideVerifying ? (
+                  <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* =========================================
           APPLICATION (Masquée pendant l'impression)
           ========================================= */}
@@ -487,6 +647,30 @@ export default function PosPage() {
             </div>
             
             <div className="pt-2 space-y-3">
+              {/* Sélecteur de moyen de paiement */}
+              <div className="flex bg-gray-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setPaymentMethod('ESPECES')}
+                  className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                    paymentMethod === 'ESPECES' 
+                      ? 'bg-white text-gray-900 shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Espèces
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('ORANGE_MONEY')}
+                  className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${
+                    paymentMethod === 'ORANGE_MONEY' 
+                      ? 'bg-[#FF7900] text-white shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Orange Money
+                </button>
+              </div>
+
               <button 
                 onClick={clearCart}
                 disabled={cart.length === 0 || isCheckingOut}
