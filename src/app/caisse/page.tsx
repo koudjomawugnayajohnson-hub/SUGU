@@ -127,6 +127,19 @@ export default function PosPage() {
   }
 
   // =========================================
+  // VÉRIFICATION DE L'AUTHENTIFICATION
+  // =========================================
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsAuthenticated(!!user)
+    }
+    checkAuth()
+  }, [])
+
+  // =========================================
   // LOGIQUE D'ENCAISSEMENT (CHECKOUT)
   // =========================================
   
@@ -138,53 +151,44 @@ export default function PosPage() {
   const handleCheckout = async () => {
     if (cart.length === 0) return
 
+    // Vérifier l'authentification avant l'encaissement
+    if (!isAuthenticated) {
+      alert("⚠️ Vous devez être connecté pour encaisser. Redirection vers la page de connexion...")
+      window.location.href = '/login'
+      return
+    }
+
     setIsCheckingOut(true)
-    
-    // L'ID du tenant de démo que nous avons inséré dans la base
-    const DEMO_TENANT_ID = '11111111-1111-1111-1111-111111111111'
 
     try {
-      // Génération de l'ID côté client (évite le blocage RLS sur le SELECT)
-      const orderId = crypto.randomUUID()
-
-      // 1. Créer le ticket (dans la table 'orders' selon notre schéma SaaS)
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          id: orderId,
-          tenant_id: DEMO_TENANT_ID,
-          total_amount: total,
-          payment_method: 'CASH', // Méthode par défaut
-          status: 'COMPLETED'
+      // Appel au serveur — le tenant_id est extrait du JWT côté serveur
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cart: cart.map(item => ({
+            product: { id: item.product.id, name: item.product.name, price: item.product.price },
+            quantity: item.quantity
+          })),
+          total,
+          paymentMethod: 'CASH'
         })
+      })
 
-      if (orderError) throw orderError
+      const data = await response.json()
 
-      // 2. Préparer les lignes du ticket (dans la table 'order_items')
-      const orderItemsToInsert = cart.map((item) => ({
-        tenant_id: DEMO_TENANT_ID,
-        order_id: orderId,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        subtotal: item.product.price * item.quantity
-      }))
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur inconnue lors de l'encaissement.")
+      }
 
-      // 3. Insérer toutes les lignes d'un coup
-      const { error: linesError } = await supabase
-        .from('order_items')
-        .insert(orderItemsToInsert)
-
-      if (linesError) throw linesError
-
-      // 4. Succès : Nettoyage et préparation de l'impression
+      // Succès : Nettoyage et préparation de l'impression
       setLastReceipt({
         items: [...cart],
         subtotal,
         tax,
         total,
         date: new Date(),
-        orderId
+        orderId: data.orderId
       })
 
       setCart([])
@@ -199,7 +203,8 @@ export default function PosPage() {
 
     } catch (error) {
       console.error("Erreur lors de l'encaissement :", error)
-      alert("❌ Une erreur est survenue lors de l'encaissement. Veuillez vérifier votre connexion.")
+      const message = error instanceof Error ? error.message : "Erreur inconnue"
+      alert(`❌ ${message}`)
     } finally {
       setIsCheckingOut(false)
     }

@@ -52,14 +52,18 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 -- Les politiques RLS : Un utilisateur ne peut voir/modifier que les données où le tenant_id correspond à son propre tenant_id contenu dans son token de session (JWT).
 
 -- RLS pour Locations
-CREATE POLICY "Isolation totale des Boutiques" ON locations
+CREATE POLICY "tenant_isolation_locations" ON locations
     FOR ALL
-    USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
 
 -- RLS pour Users
-CREATE POLICY "Isolation totale des Utilisateurs" ON users
+CREATE POLICY "tenant_isolation_users" ON users
     FOR ALL
-    USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
 
 -- ==========================================
 -- 🛒 SYSTÈME DE CAISSE (PRODUITS & VENTES)
@@ -121,7 +125,23 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Isolation des Catégories" ON categories FOR ALL USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
-CREATE POLICY "Isolation des Produits" ON products FOR ALL USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
-CREATE POLICY "Isolation des Commandes" ON orders FOR ALL USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
-CREATE POLICY "Isolation des Lignes de Commande" ON order_items FOR ALL USING (tenant_id = (auth.jwt()->>'tenant_id')::UUID);
+CREATE POLICY "tenant_isolation_categories" ON categories FOR ALL
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
+
+CREATE POLICY "tenant_isolation_products" ON products FOR ALL
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
+
+CREATE POLICY "tenant_isolation_orders" ON orders FOR ALL
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
+
+CREATE POLICY "tenant_isolation_order_items" ON order_items FOR ALL
+    TO authenticated
+    USING (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID))
+    WITH CHECK (tenant_id = ((auth.jwt()->'app_metadata'->>'tenant_id')::UUID));
+
