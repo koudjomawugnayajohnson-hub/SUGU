@@ -80,3 +80,94 @@ export async function POST(request: Request) {
     )
   }
 }
+
+export async function GET(request: Request) {
+  try {
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    let tenantId = null;
+    const { data: userData } = await supabase.from('users').select('tenant_id').eq('id', user.id).single()
+    if (userData?.tenant_id) {
+      tenantId = userData.tenant_id
+    } else {
+      const { data: rpcTenantId } = await supabase.rpc('get_my_tenant_id')
+      if (rpcTenantId) tenantId = rpcTenantId
+    }
+
+    if (!tenantId) {
+      return NextResponse.json({ error: 'Impossible de récupérer l\'identifiant de la boutique.' }, { status: 403 })
+    }
+
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data, error } = await supabaseAdmin
+      .from('cashiers')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json({ data })
+  } catch (error: any) {
+    console.error('Erreur GET cashiers:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    
+    if (!id) {
+      return NextResponse.json({ error: 'ID manquant' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    let tenantId = null;
+    const { data: userData } = await supabase.from('users').select('tenant_id').eq('id', user.id).single()
+    if (userData?.tenant_id) {
+      tenantId = userData.tenant_id
+    } else {
+      const { data: rpcTenantId } = await supabase.rpc('get_my_tenant_id')
+      if (rpcTenantId) tenantId = rpcTenantId
+    }
+
+    if (!tenantId) {
+      return NextResponse.json({ error: 'Impossible de récupérer l\'identifiant de la boutique.' }, { status: 403 })
+    }
+
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await supabaseAdmin
+      .from('cashiers')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+
+    if (error) throw error
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error('Erreur DELETE cashiers:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

@@ -28,13 +28,11 @@ export default function CashiersPage() {
   const fetchCashiers = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
-        .from('cashiers')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setCashiers(data || [])
+      const response = await fetch('/api/cashiers')
+      const result = await response.json()
+      
+      if (!response.ok) throw new Error(result.error)
+      setCashiers(result.data || [])
     } catch (err: any) {
       console.error('Erreur de chargement:', err)
       setError('Impossible de charger les caissiers.')
@@ -97,12 +95,10 @@ export default function CashiersPage() {
 
     setIsDeleting(id)
     try {
-      const { error } = await supabase
-        .from('cashiers')
-        .delete()
-        .eq('id', id)
+      const response = await fetch(`/api/cashiers?id=${id}`, { method: 'DELETE' })
+      const result = await response.json()
 
-      if (error) throw error
+      if (!response.ok) throw new Error(result.error)
 
       setCashiers(cashiers.filter(c => c.id !== id))
     } catch (err: any) {
