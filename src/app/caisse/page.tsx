@@ -55,7 +55,8 @@ export default function PosPage() {
   const [isLocked, setIsLocked] = useState(true)
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState(false)
-  const CORRECT_PIN = '1234' // Code PIN en dur pour le prototype
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [currentCashier, setCurrentCashier] = useState<string | null>(null)
 
   const handlePinInput = (num: string) => {
     if (pin.length < 4) {
@@ -69,16 +70,35 @@ export default function PosPage() {
     setPinError(false)
   }
 
-  const handlePinSubmit = () => {
-    if (pin === CORRECT_PIN) {
+  const handlePinSubmit = async () => {
+    if (pin.length !== 4) return
+    
+    setIsVerifying(true)
+    
+    try {
+      const { data, error } = await supabase
+        .from('cashiers')
+        .select('name')
+        .eq('pin_code', pin)
+        .single()
+        
+      if (error || !data) {
+        throw new Error('Code PIN invalide')
+      }
+      
+      // Succès
+      setCurrentCashier(data.name)
       setIsLocked(false)
       setPin('')
-    } else {
+    } catch (err) {
+      // Échec
       setPinError(true)
       setTimeout(() => {
         setPin('')
         setPinError(false)
       }, 500)
+    } finally {
+      setIsVerifying(false)
     }
   }
   
@@ -304,14 +324,18 @@ export default function PosPage() {
             </button>
             <button
               onClick={handlePinSubmit}
-              disabled={pin.length < 4}
+              disabled={pin.length < 4 || isVerifying}
               className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all ${
-                pin.length === 4 
+                pin.length === 4 && !isVerifying
                   ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-lg shadow-blue-600/40' 
                   : 'bg-white/5 text-white/20 cursor-not-allowed'
               }`}
             >
-              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
+              {isVerifying ? (
+                <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
+              )}
             </button>
           </div>
         </div>
@@ -345,6 +369,14 @@ export default function PosPage() {
                 className="block w-full rounded-2xl border-0 py-3.5 pl-11 pr-4 text-gray-900 bg-gray-100 placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-blue-600 sm:text-lg transition-all"
               />
             </div>
+            
+            {/* Infos Caissier Connecté */}
+            {currentCashier && (
+              <div className="hidden sm:flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-100 font-medium text-sm">
+                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                Connecté : {currentCashier}
+              </div>
+            )}
           </div>
 
           {/* Grille de produits */}
