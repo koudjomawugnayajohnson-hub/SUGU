@@ -54,13 +54,23 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Mapping du moyen de paiement pour correspondre à l'enum de la base de données
+    let dbPaymentMethod = 'CASH'
+    if (paymentMethod === 'ORANGE_MONEY') {
+      dbPaymentMethod = 'MOBILE_MONEY'
+    } else if (paymentMethod === 'ESPECES') {
+      dbPaymentMethod = 'CASH'
+    } else if (paymentMethod) {
+      dbPaymentMethod = paymentMethod // fallback
+    }
+
     const { error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
         id: orderId,
         tenant_id: tenantId,
         total_amount: total,
-        payment_method: paymentMethod || 'CASH',
+        payment_method: dbPaymentMethod,
         status: 'COMPLETED',
         cashier_name: cashierName || 'Inconnu'
       })
