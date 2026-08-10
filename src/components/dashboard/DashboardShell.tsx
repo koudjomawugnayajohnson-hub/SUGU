@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
@@ -36,6 +36,15 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cashierRole = localStorage.getItem('sugu_cashier_role')
+      if (cashierRole === 'CASHIER') {
+        router.replace('/caisse')
+      }
+    }
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">

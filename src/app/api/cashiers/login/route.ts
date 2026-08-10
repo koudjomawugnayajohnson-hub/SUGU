@@ -43,26 +43,28 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // 3. Vérifier le PIN dans la table cashiers avec le rôle ADMIN
-    const { data: adminData, error: adminError } = await supabaseAdmin
+    // 3. Vérifier le PIN dans la table cashiers
+    const { data: cashierData, error: cashierError } = await supabaseAdmin
       .from('cashiers')
-      .select('role')
+      .select('name, role')
       .eq('tenant_id', tenantId)
       .eq('pin_code', pin)
       .single()
 
-    if (adminError || !adminData) {
+    if (cashierError || !cashierData) {
       return NextResponse.json({ success: false, error: 'PIN invalide' }, { status: 403 })
     }
 
-    if (adminData.role !== 'ADMIN' && adminData.role !== 'MANAGER') {
-      return NextResponse.json({ success: false, error: 'Accès refusé : Droits administrateur requis.' }, { status: 403 })
-    }
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ 
+      success: true, 
+      cashier: { 
+        name: cashierData.name, 
+        role: cashierData.role 
+      } 
+    })
 
   } catch (error: any) {
-    console.error('Erreur verify-master-pin:', error)
+    console.error('Erreur cashiers login:', error)
     return NextResponse.json({ success: false, error: 'Erreur interne' }, { status: 500 })
   }
 }

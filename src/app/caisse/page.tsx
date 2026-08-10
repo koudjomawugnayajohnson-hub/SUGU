@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User, X } from 'lucide-react'
+import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User, X, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 
@@ -58,6 +58,7 @@ export default function PosPage() {
   const [pinError, setPinError] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [cashierName, setCashierName] = useState<string | null>(null)
+  const [cashierRole, setCashierRole] = useState<string | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'ESPECES' | 'ORANGE_MONEY'>('ESPECES')
 
   // =========================================
@@ -134,15 +135,23 @@ export default function PosPage() {
     setIsVerifying(true)
     
     try {
-      const { data: cashierName, error } = await supabase
-        .rpc('verify_pin', { p_pin: pin })
+      const response = await fetch('/api/cashiers/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      })
+      const data = await response.json()
         
-      if (error || !cashierName) {
-        throw new Error('Code PIN invalide')
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Code PIN invalide')
       }
       
       // Succès
-      setCashierName(cashierName)
+      setCashierName(data.cashier.name)
+      setCashierRole(data.cashier.role)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sugu_cashier_role', data.cashier.role)
+      }
       setIsLocked(false)
       setPin('')
     } catch (err) {
@@ -154,6 +163,15 @@ export default function PosPage() {
       }, 500)
     } finally {
       setIsVerifying(false)
+    }
+  }
+
+  const handleCashierLogout = () => {
+    setIsLocked(true)
+    setCashierName(null)
+    setCashierRole(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('sugu_cashier_role')
     }
   }
   
@@ -329,7 +347,7 @@ export default function PosPage() {
       // Attendre un instant pour que React affiche le ticket caché, puis lancer l'impression
       setTimeout(() => {
         window.print()
-      }, 500)
+      }, 50)
 
     } catch (error) {
       console.error("Erreur lors de l'encaissement :", error)
@@ -512,9 +530,15 @@ export default function PosPage() {
           
           {/* Topbar / Barre de recherche */}
           <div className="flex items-center gap-4 p-4 bg-white border-b border-gray-200 shadow-sm z-10 shrink-0">
-            <Link href="/dashboard" className="p-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors">
-              <ArrowLeft className="h-6 w-6" />
-            </Link>
+            {cashierRole === 'ADMIN' ? (
+              <Link href="/dashboard" className="p-3 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors" title="Retour au Dashboard">
+                <ArrowLeft className="h-6 w-6" />
+              </Link>
+            ) : (
+              <button onClick={handleCashierLogout} className="p-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors" title="Déconnexion de la caisse">
+                <LogOut className="h-6 w-6" />
+              </button>
+            )}
             
             <div className="relative flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -584,6 +608,13 @@ export default function PosPage() {
               <h2 className="text-xl font-bold text-gray-900 tracking-tight">Ticket en cours</h2>
             </div>
             <div className="flex items-center gap-2">
+              <button 
+                onClick={() => window.print()}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                title="Ouvrir le tiroir caisse"
+              >
+                Ouvrir Tiroir
+              </button>
               {lastReceipt && (
                 <button 
                   onClick={() => window.print()}
