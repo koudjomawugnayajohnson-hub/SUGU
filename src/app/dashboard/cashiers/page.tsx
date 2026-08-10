@@ -8,6 +8,7 @@ type Cashier = {
   id: string
   name: string
   pin_code: string
+  role?: string
   created_at: string
 }
 
@@ -21,6 +22,7 @@ export default function CashiersPage() {
   // Form state
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
+  const [role, setRole] = useState('CASHIER')
   const [error, setError] = useState('')
 
   const supabase = createClient()
@@ -67,7 +69,7 @@ export default function CashiersPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name.trim(), pinCode: pin }),
+        body: JSON.stringify({ name: name.trim(), pinCode: pin, role }),
       })
 
       const result = await response.json()
@@ -167,6 +169,18 @@ export default function CashiersPage() {
                 <p className="text-xs text-slate-400 mt-2">Ce code servira à déverrouiller la caisse.</p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Rôle</label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border-0 text-slate-900 focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
+                >
+                  <option value="CASHIER">Caissier</option>
+                  <option value="ADMIN">Administrateur / Gérant</option>
+                </select>
+              </div>
+
               <button
                 type="submit"
                 disabled={isAdding}
@@ -202,6 +216,7 @@ export default function CashiersPage() {
                 <thead>
                   <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
                     <th className="px-6 py-4 font-semibold">Nom</th>
+                    <th className="px-6 py-4 font-semibold">Rôle</th>
                     <th className="px-6 py-4 font-semibold">Code PIN</th>
                     <th className="px-6 py-4 font-semibold">Ajouté le</th>
                     <th className="px-6 py-4 font-semibold text-right">Actions</th>
@@ -231,6 +246,17 @@ export default function CashiersPage() {
                             </div>
                             <span className="font-semibold text-slate-800">{cashier.name}</span>
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {cashier.role === 'ADMIN' ? (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                              ADMIN
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                              CASHIER
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-mono font-medium bg-slate-100 text-slate-800">

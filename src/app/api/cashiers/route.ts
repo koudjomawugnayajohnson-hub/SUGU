@@ -4,7 +4,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export async function POST(request: Request) {
   try {
-    const { name, pinCode } = await request.json()
+    const { name, pinCode, role } = await request.json()
 
     if (!name || !pinCode) {
       return NextResponse.json(
@@ -60,7 +60,8 @@ export async function POST(request: Request) {
         {
           tenant_id: tenantId,
           name: name.trim(),
-          pin_code: pinCode
+          pin_code: pinCode,
+          role: role || 'CASHIER'
         }
       ])
       .select()

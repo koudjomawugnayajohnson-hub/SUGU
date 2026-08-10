@@ -1,0 +1,62 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/utils/supabase/server'
+
+export async function POST(request: Request) {
+  try {
+    const { pin } = await request.json()
+
+    if (!pin) {
+      return NextResponse.json({ success: false, error: 'PIN requis' }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+
+    // 1. Identifier le propriétaire connecté
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json({ success: false, error: 'Non autorisé' }, { status: 401 })
+    }
+
+    // 2. Récupérer le tenant_id
+    let tenantId = null;
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!userError && userData?.tenant_id) {
+      tenantId = userData.tenant_id
+    } else {
+      const { data: rpcTenantId } = await supabase.rpc('get_my_tenant_id')
+      if (rpcTenantId) tenantId = rpcTenantId
+    }
+
+    if (!tenantId) {
+      return NextResponse.json({ success: false, error: 'Impossible de récupérer la boutique' }, { status: 403 })
+    }
+
+    // 3. Vérifier le PIN dans la table cashiers avec le rôle ADMIN
+    const { data: adminData, error: adminError } = await supabase
+      .from('cashiers')
+      .select('role')
+      .eq('tenant_id', tenantId)
+      .eq('pin_code', pin)
+      .single()
+
+    if (adminError || !adminData) {
+      return NextResponse.json({ success: false, error: 'PIN invalide' }, { status: 403 })
+    }
+
+    if (adminData.role !== 'ADMIN' && adminData.role !== 'MANAGER') {
+      return NextResponse.json({ success: false, error: 'Accès refusé : Droits administrateur requis.' }, { status: 403 })
+    }
+
+    return NextResponse.json({ success: true })
+
+  } catch (error: any) {
+    console.error('Erreur verify-master-pin:', error)
+    return NextResponse.json({ success: false, error: 'Erreur interne' }, { status: 500 })
+  }
+}
