@@ -108,22 +108,28 @@ export async function POST(request: Request) {
       )
     }
 
-    // 7. Update stock
-    for (const item of cart) {
-      const { data: productData, error: productError } = await supabaseAdmin
-        .from('products')
-        .select('stock')
-        .eq('id', item.product.id)
-        .single()
-
-      if (!productError && productData) {
-        const newStock = Math.max(0, (productData.stock || 0) - item.quantity)
-        await supabaseAdmin
-          .from('products')
-          .update({ stock: newStock })
-          .eq('id', item.product.id)
+    // 7. Update stock (fire and forget to not block response)
+    ;(async () => {
+      for (const item of cart) {
+        try {
+          const { data: productData, error: productError } = await supabaseAdmin
+            .from('products')
+            .select('stock_quantity, track_stock')
+            .eq('id', item.product.id)
+            .single()
+  
+          if (!productError && productData && productData.track_stock === true) {
+            const newStock = Math.max(0, (productData.stock_quantity || 0) - item.quantity)
+            await supabaseAdmin
+              .from('products')
+              .update({ stock_quantity: newStock })
+              .eq('id', item.product.id)
+          }
+        } catch (err) {
+          console.error(`Erreur asynchrone lors de la déduction de stock pour le produit ${item.product.id}:`, err)
+        }
       }
-    }
+    })()
 
     // 8. Success
     return NextResponse.json({

@@ -8,7 +8,8 @@ type Product = {
   id: string
   name: string
   price: number
-  stock: number
+  stock_quantity: number
+  track_stock: boolean
 }
 
 export default function ProductsPage() {
@@ -21,7 +22,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   
   // Form states
-  const [formData, setFormData] = useState({ name: '', price: '', stock: '' })
+  const [formData, setFormData] = useState({ name: '', price: '', stock_quantity: '', track_stock: true })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const supabase = createClient()
@@ -69,11 +70,12 @@ export default function ProductsPage() {
       setFormData({ 
         name: product.name, 
         price: product.price.toString(), 
-        stock: product.stock.toString() 
+        stock_quantity: (product.stock_quantity || 0).toString(),
+        track_stock: product.track_stock !== false
       })
     } else {
       setEditingProduct(null)
-      setFormData({ name: '', price: '', stock: '100' })
+      setFormData({ name: '', price: '', stock_quantity: '100', track_stock: true })
     }
     setIsModalOpen(true)
   }
@@ -81,7 +83,7 @@ export default function ProductsPage() {
   const closeModal = () => {
     setIsModalOpen(false)
     setEditingProduct(null)
-    setFormData({ name: '', price: '', stock: '' })
+    setFormData({ name: '', price: '', stock_quantity: '', track_stock: true })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,7 +93,8 @@ export default function ProductsPage() {
     const payload = {
       name: formData.name,
       price: parseInt(formData.price) || 0,
-      stock: parseInt(formData.stock) || 0,
+      stock_quantity: parseInt(formData.stock_quantity) || 0,
+      track_stock: formData.track_stock
     }
 
     try {
@@ -201,9 +204,15 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`font-medium px-2 py-1 rounded-md ${product.stock > 10 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {product.stock}
-                      </span>
+                      {product.track_stock ? (
+                        <span className={`font-medium px-2 py-1 rounded-md ${product.stock_quantity > 10 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {product.stock_quantity}
+                        </span>
+                      ) : (
+                        <span className="font-medium text-gray-700 bg-gray-100 px-2 py-1 rounded-md">
+                          Illimité
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -270,19 +279,34 @@ export default function ProductsPage() {
                     placeholder="500"
                   />
                 </div>
+                
+                <div className="flex flex-col justify-center pt-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={formData.track_stock}
+                      onChange={e => setFormData({...formData, track_stock: e.target.checked})}
+                      className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                    />
+                    <span className="text-sm font-semibold text-gray-700">Suivre l'inventaire</span>
+                  </label>
+                </div>
+              </div>
+
+              {formData.track_stock && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Stock</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Quantité en stock</label>
                   <input 
                     type="number"
                     required
                     min="0"
-                    value={formData.stock}
-                    onChange={e => setFormData({...formData, stock: e.target.value})}
+                    value={formData.stock_quantity}
+                    onChange={e => setFormData({...formData, stock_quantity: e.target.value})}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
                     placeholder="100"
                   />
                 </div>
-              </div>
+              )}
 
               <div className="pt-4 flex gap-3">
                 <button 
