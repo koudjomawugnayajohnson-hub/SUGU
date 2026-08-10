@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2 } from 'lucide-react'
+import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2, User } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 
@@ -56,7 +56,7 @@ export default function PosPage() {
   const [pin, setPin] = useState('')
   const [pinError, setPinError] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [currentCashier, setCurrentCashier] = useState<string | null>(null)
+  const [cashierName, setCashierName] = useState<string | null>(null)
 
   const handlePinInput = (num: string) => {
     if (pin.length < 4) {
@@ -87,7 +87,7 @@ export default function PosPage() {
       }
       
       // Succès
-      setCurrentCashier(data.name)
+      setCashierName(data.name)
       setIsLocked(false)
       setPin('')
     } catch (err) {
@@ -371,10 +371,10 @@ export default function PosPage() {
             </div>
             
             {/* Infos Caissier Connecté */}
-            {currentCashier && (
-              <div className="hidden sm:flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-100 font-medium text-sm">
-                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
-                Connecté : {currentCashier}
+            {cashierName && (
+              <div className="hidden sm:flex items-center px-4 py-2 bg-slate-100 text-slate-700 rounded-xl border border-slate-200 font-medium text-sm">
+                <User className="w-4 h-4 mr-2 text-slate-500" />
+                Caissier : {cashierName}
               </div>
             )}
           </div>
