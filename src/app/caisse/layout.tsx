@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
-import DashboardShell from '@/components/dashboard/DashboardShell'
 import SuspendedScreen from '@/components/dashboard/SuspendedScreen'
 
-export default async function DashboardLayout({
+export default async function CaisseLayout({
   children,
 }: {
   children: React.ReactNode
@@ -32,6 +31,6 @@ export default async function DashboardLayout({
     }
   }
 
-  // Rendu de l'interface protégée (Sidebar + Header)
-  return <DashboardShell>{children}</DashboardShell>
+  // Rendu de l'interface protégée (Caisse n'a pas de DashboardShell, juste les enfants)
+  return <>{children}</>
 }
