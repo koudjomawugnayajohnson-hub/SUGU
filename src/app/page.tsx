@@ -3,12 +3,12 @@ import {
   Store,
   ShieldCheck,
   LineChart,
-  MonitorTouchpad,
+  Monitor,
   PackageCheck,
   Users,
   CreditCard,
   ChevronRight,
-  CheckCircle2,
+  CheckCircle,
   Menu
 } from 'lucide-react'
 
@@ -144,7 +144,7 @@ export default function Home() {
               {/* Image/Mockup area (Placeholder visually) */}
               <div className="relative rounded-3xl bg-slate-100 p-8 ring-1 ring-slate-200 overflow-hidden h-[400px] flex items-center justify-center">
                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-blue-50 opacity-50"></div>
-                 <MonitorTouchpad className="h-32 w-32 text-indigo-300 relative z-10" />
+                 <Monitor className="h-32 w-32 text-indigo-300 relative z-10" />
                  <div className="absolute bottom-0 w-[80%] h-[70%] bg-white rounded-t-2xl shadow-2xl border-t border-x border-slate-200 translate-y-8">
                     {/* Fake UI */}
                     <div className="h-12 border-b border-slate-100 flex items-center px-4 gap-2">
@@ -166,7 +166,7 @@ export default function Home() {
               <div className="space-y-8">
                 <div className="flex gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
-                    <MonitorTouchpad className="h-5 w-5" />
+                    <Monitor className="h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-slate-900">Caisse Tactile Rapide</h3>
@@ -229,10 +229,10 @@ export default function Home() {
                     <span className="text-sm font-semibold leading-6 text-slate-600">FCFA / mois</span>
                   </p>
                   <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-slate-600">
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-600" /> 1 Caisse</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-600" /> 1 Utilisateur</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-600" /> Gestion des stocks</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-600" /> Support par email</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-600" /> 1 Caisse</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-600" /> 1 Utilisateur</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-600" /> Gestion des stocks</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-600" /> Support par email</li>
                   </ul>
                 </div>
                 <a href="/login" className="mt-8 block rounded-full px-3 py-2.5 text-center text-sm font-semibold leading-6 text-indigo-600 ring-1 ring-inset ring-indigo-200 hover:ring-indigo-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-all hover:bg-indigo-50">
@@ -253,10 +253,10 @@ export default function Home() {
                     <span className="text-sm font-semibold leading-6 text-slate-300">FCFA / mois</span>
                   </p>
                   <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-slate-300">
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-400" /> Caisses illimitées</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-400" /> Employés illimités (Système PIN)</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-400" /> Rapports financiers avancés</li>
-                    <li className="flex gap-x-3"><CheckCircle2 className="h-6 w-5 flex-none text-indigo-400" /> Support prioritaire 7j/7</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-400" /> Caisses illimitées</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-400" /> Employés illimités (Système PIN)</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-400" /> Rapports financiers avancés</li>
+                    <li className="flex gap-x-3"><CheckCircle className="h-6 w-5 flex-none text-indigo-400" /> Support prioritaire 7j/7</li>
                   </ul>
                 </div>
                 <a href="/login" className="mt-8 block rounded-full bg-indigo-500 px-3 py-2.5 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition-all hover:shadow-md active:scale-95">
