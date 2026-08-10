@@ -21,6 +21,13 @@ type CartItem = {
   quantity: number
 }
 
+type ShopSettings = {
+  name: string
+  address: string
+  phone: string
+  tax_rate: number
+}
+
 type ReceiptData = {
   items: CartItem[]
   subtotal: number
@@ -41,6 +48,7 @@ const generateColor = (name: string) => {
 export default function PosPage() {
   // États de la base de données
   const [products, setProducts] = useState<Product[]>([])
+  const [shopSettings, setShopSettings] = useState<ShopSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // État du panier, hydratation et encaissement
@@ -233,6 +241,25 @@ export default function PosPage() {
         } else if (data) {
           setProducts(data)
         }
+
+        // Charger les paramètres du magasin
+        const { data: tenantIdData } = await supabase.rpc('get_my_tenant_id')
+        if (tenantIdData) {
+          const { data: tenantData } = await supabase
+            .from('tenants')
+            .select('name, address, phone, tax_rate')
+            .eq('id', tenantIdData)
+            .single()
+            
+          if (tenantData) {
+            setShopSettings({
+              name: tenantData.name || 'SUGU',
+              address: tenantData.address || '',
+              phone: tenantData.phone || '',
+              tax_rate: tenantData.tax_rate ?? 18
+            })
+          }
+        }
       } catch (err) {
         console.error('Erreur inattendue:', err)
       } finally {
@@ -312,8 +339,9 @@ export default function PosPage() {
   // =========================================
   
   // Calculs en temps réel
+  const taxRate = shopSettings?.tax_rate ?? 18
   const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)
-  const tax = subtotal * 0.18 // TVA 18%
+  const tax = subtotal * (taxRate / 100) 
   const total = subtotal + tax
 
   const handleCheckout = async () => {
@@ -768,7 +796,7 @@ export default function PosPage() {
                 <span className="font-medium">{subtotal} F</span>
               </div>
               <div className="flex justify-between text-gray-500 text-sm">
-                <span>TVA (18%)</span>
+                <span>TVA ({taxRate}%)</span>
                 <span className="font-medium">{tax} F</span>
               </div>
               <div className="flex justify-between text-gray-900 text-2xl font-black pt-2 border-t border-gray-100 mt-2">
@@ -830,8 +858,10 @@ export default function PosPage() {
       {lastReceipt && (
         <div className="hidden print:block w-[80mm] mx-auto p-4 bg-white text-black font-mono text-sm leading-tight">
           <div className="text-center mb-4">
-            <h1 className="font-bold text-2xl mb-1 uppercase tracking-wider">SUGU</h1>
-            <p className="text-xs uppercase">Point de Vente</p>
+            <h1 className="font-bold text-2xl mb-1 uppercase tracking-wider">{shopSettings?.name || 'SUGU'}</h1>
+            {shopSettings?.address && <p className="text-xs">{shopSettings.address}</p>}
+            {shopSettings?.phone && <p className="text-xs">{shopSettings.phone}</p>}
+            {!shopSettings?.address && !shopSettings?.phone && <p className="text-xs uppercase">Point de Vente</p>}
             <div className="border-b border-dashed border-black pb-2 mb-2 mt-3 text-xs">
               <p>Le {lastReceipt.date.toLocaleDateString('fr-FR')} à {lastReceipt.date.toLocaleTimeString('fr-FR')}</p>
               <p className="font-bold mt-1">Ticket #{lastReceipt.orderId.split('-')[0].toUpperCase()}</p>
@@ -864,7 +894,7 @@ export default function PosPage() {
               <span>{lastReceipt.subtotal.toLocaleString('fr-FR')} F</span>
             </div>
             <div className="flex justify-between mb-1">
-              <span>TVA (18%)</span>
+              <span>TVA ({taxRate}%)</span>
               <span>{lastReceipt.tax.toLocaleString('fr-FR')} F</span>
             </div>
             <div className="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dashed border-black">
