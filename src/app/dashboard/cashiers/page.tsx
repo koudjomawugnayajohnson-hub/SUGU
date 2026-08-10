@@ -63,28 +63,14 @@ export default function CashiersPage() {
 
     setIsAdding(true)
     try {
-      // 1. Récupérer l'utilisateur connecté
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user?.id) throw new Error("Vous n'êtes pas connecté.")
+      // 1. Obtenir le tenant_id via la fonction sécurisée RPC
+      const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id');
 
-      // 2. Chercher le tenant_id de cet utilisateur dans la table users sans .single()
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('tenant_id')
-        .eq('id', user.id)
-
-      if (userError) {
-        console.error("Erreur SELECT users:", userError);
-        throw new Error(`Erreur DB: ${userError.message}`);
-      }
-      
-      const tenantId = userData?.[0]?.tenant_id;
-      
-      if (!tenantId) {
-        throw new Error("Impossible de trouver votre identifiant de locataire (tenant_id).");
+      if (tenantError || !tenantId) {
+        throw new Error("Erreur critique : Impossible de récupérer l'identifiant de la boutique via RPC.");
       }
 
-      // 3. Insérer le caissier en précisant explicitement le tenant_id
+      // 2. Insérer le caissier en précisant explicitement le tenant_id
       const { error: insertError } = await supabase
         .from('cashiers')
         .insert([
