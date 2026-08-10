@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer } from 'lucide-react'
+import { Search, Receipt, Trash2, Trash, ArrowLeft, Loader2, Printer, Lock, Delete, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 
@@ -48,6 +48,39 @@ export default function PosPage() {
   
   // État du dernier reçu pour impression
   const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null)
+  
+  // =========================================
+  // VERROUILLAGE DE LA CAISSE (PIN)
+  // =========================================
+  const [isLocked, setIsLocked] = useState(true)
+  const [pin, setPin] = useState('')
+  const [pinError, setPinError] = useState(false)
+  const CORRECT_PIN = '1234' // Code PIN en dur pour le prototype
+
+  const handlePinInput = (num: string) => {
+    if (pin.length < 4) {
+      setPin(prev => prev + num)
+      setPinError(false)
+    }
+  }
+
+  const handlePinClear = () => {
+    setPin('')
+    setPinError(false)
+  }
+
+  const handlePinSubmit = () => {
+    if (pin === CORRECT_PIN) {
+      setIsLocked(false)
+      setPin('')
+    } else {
+      setPinError(true)
+      setTimeout(() => {
+        setPin('')
+        setPinError(false)
+      }, 500)
+    }
+  }
   
   const supabase = createClient()
 
@@ -214,6 +247,76 @@ export default function PosPage() {
   // On évite les disparités d'hydratation (Hydration Mismatch)
   if (!isMounted) {
     return <div className="h-screen bg-gray-50 flex items-center justify-center font-sans text-gray-500">Chargement de la caisse...</div>
+  }
+
+  // =========================================
+  // ÉCRAN DE VERROUILLAGE (PIN)
+  // =========================================
+  if (isLocked) {
+    return (
+      <div className="h-screen bg-slate-900 flex flex-col items-center justify-center font-sans">
+        <div className="flex flex-col items-center bg-white/10 backdrop-blur-md p-8 sm:p-12 rounded-3xl shadow-2xl border border-white/20 transition-all">
+          <div className="bg-blue-500 p-4 rounded-full mb-6 shadow-lg shadow-blue-500/30">
+            <Lock className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Caisse Verrouillée</h1>
+          <p className="text-slate-300 text-sm mb-8">Saisissez votre code PIN pour y accéder</p>
+          
+          {/* Affichage du code PIN (Points) */}
+          <div className="flex gap-4 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div 
+                key={i} 
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all duration-200 ${
+                  i < pin.length 
+                    ? (pinError ? 'bg-red-500 border-red-500' : 'bg-blue-500 border-blue-500 shadow-md shadow-blue-500/50') 
+                    : (pinError ? 'border-red-500' : 'border-slate-500')
+                }`}
+              />
+            ))}
+          </div>
+          <div className="h-6 mb-6 -mt-6 flex items-center justify-center w-full">
+            {pinError && <p className="text-red-400 font-medium text-sm animate-pulse">Code PIN incorrect</p>}
+          </div>
+
+          {/* Pavé Numérique */}
+          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <button
+                key={num}
+                onClick={() => handlePinInput(num.toString())}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-3xl font-semibold transition-colors flex items-center justify-center shadow-sm"
+              >
+                {num}
+              </button>
+            ))}
+            <button
+              onClick={handlePinClear}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/5 hover:bg-white/15 active:bg-red-500/40 text-slate-300 hover:text-white flex items-center justify-center transition-colors"
+            >
+              <Delete className="w-8 h-8" />
+            </button>
+            <button
+              onClick={() => handlePinInput('0')}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-3xl font-semibold transition-colors flex items-center justify-center shadow-sm"
+            >
+              0
+            </button>
+            <button
+              onClick={handlePinSubmit}
+              disabled={pin.length < 4}
+              className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all ${
+                pin.length === 4 
+                  ? 'bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-lg shadow-blue-600/40' 
+                  : 'bg-white/5 text-white/20 cursor-not-allowed'
+              }`}
+            >
+              <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
