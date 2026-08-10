@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     // 3. Parse the request body
     const body = await request.json()
-    const { cart, total, paymentMethod } = body
+    const { cart, total, paymentMethod, cashierName } = body
 
     if (!cart || !Array.isArray(cart) || cart.length === 0) {
       return NextResponse.json(
@@ -55,7 +55,8 @@ export async function POST(request: Request) {
         tenant_id: tenantId,
         total_amount: total,
         payment_method: paymentMethod || 'CASH',
-        status: 'COMPLETED'
+        status: 'COMPLETED',
+        cashier_name: cashierName || 'Inconnu'
       })
 
     if (orderError) {

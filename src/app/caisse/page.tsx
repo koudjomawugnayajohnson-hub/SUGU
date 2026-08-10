@@ -221,7 +221,8 @@ export default function PosPage() {
             quantity: item.quantity
           })),
           total,
-          paymentMethod: 'CASH'
+          paymentMethod: 'CASH',
+          cashierName
         })
       })
 
@@ -519,6 +520,7 @@ export default function PosPage() {
             <div className="border-b border-dashed border-black pb-2 mb-2 mt-3 text-xs">
               <p>Le {lastReceipt.date.toLocaleDateString('fr-FR')} à {lastReceipt.date.toLocaleTimeString('fr-FR')}</p>
               <p className="font-bold mt-1">Ticket #{lastReceipt.orderId.split('-')[0].toUpperCase()}</p>
+              <p className="font-bold mt-1">Caissier : {cashierName}</p>
             </div>
           </div>
           
