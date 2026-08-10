@@ -13,12 +13,9 @@ export async function POST(request: Request) {
         { error: 'Non authentifié. Veuillez vous reconnecter.' },
         { status: 401 }
       )
-    }
-
-    // We use getSession() to read the JWT claims, because the Custom Access Token Hook
-    // injects the tenant_id into the JWT, NOT into the auth.users database table.
-    const { data: { session } } = await supabase.auth.getSession()
-    const tenantId = session?.user?.app_metadata?.tenant_id
+    // We use a secure Postgres RPC function to get the tenant_id based on the user's email.
+    // This bypasses any RLS issues and doesn't rely on the JWT hook.
+    const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id')
 
     if (!tenantId) {
       return NextResponse.json(
