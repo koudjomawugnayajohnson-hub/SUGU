@@ -242,21 +242,16 @@ export default function PosPage() {
           setProducts(data)
         }
 
-        // Charger les paramètres du magasin
-        const { data: tenantIdData } = await supabase.rpc('get_my_tenant_id')
-        if (tenantIdData) {
-          const { data: tenantData } = await supabase
-            .from('tenants')
-            .select('name, address, phone, tax_rate')
-            .eq('id', tenantIdData)
-            .single()
-            
-          if (tenantData) {
+        // Charger les paramètres du magasin via l'API
+        const resSettings = await fetch('/api/settings')
+        if (resSettings.ok) {
+          const { settings } = await resSettings.json()
+          if (settings) {
             setShopSettings({
-              name: tenantData.name || 'SUGU',
-              address: tenantData.address || '',
-              phone: tenantData.phone || '',
-              tax_rate: tenantData.tax_rate ?? 18
+              name: settings.name || 'SUGU',
+              address: settings.address || '',
+              phone: settings.phone || '',
+              tax_rate: settings.tax_rate ?? 18
             })
           }
         }

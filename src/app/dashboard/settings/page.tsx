@@ -19,27 +19,18 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const { data: tenantIdData, error: rpcError } = await supabase.rpc('get_my_tenant_id')
-        if (rpcError || !tenantIdData) {
-          console.error("Erreur récupération tenant_id:", rpcError)
-          setIsLoading(false)
-          return
+        const response = await fetch('/api/settings')
+        if (!response.ok) {
+          throw new Error('Erreur de récupération des paramètres')
         }
-        
-        setTenantId(tenantIdData)
+        const { settings } = await response.json()
 
-        const { data, error } = await supabase
-          .from('tenants')
-          .select('name, address, phone, tax_rate')
-          .eq('id', tenantIdData)
-          .single()
-
-        if (data) {
-          setName(data.name || '')
-          setAddress(data.address || '')
-          setPhone(data.phone || '')
-          if (data.tax_rate !== null && data.tax_rate !== undefined) {
-            setTaxRate(data.tax_rate.toString())
+        if (settings) {
+          setName(settings.name || '')
+          setAddress(settings.address || '')
+          setPhone(settings.phone || '')
+          if (settings.tax_rate !== null && settings.tax_rate !== undefined) {
+            setTaxRate(settings.tax_rate.toString())
           }
         }
       } catch (err) {
@@ -54,21 +45,26 @@ export default function SettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!tenantId) return
-    
     setIsSaving(true)
+    
     try {
-      const { error } = await supabase
-        .from('tenants')
-        .update({
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           name,
           address,
           phone,
-          tax_rate: Number(taxRate)
-        })
-        .eq('id', tenantId)
+          tax_rate: taxRate
+        }),
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error('Erreur lors de la sauvegarde')
+      }
+
       alert("✅ Paramètres enregistrés avec succès !")
     } catch (err) {
       console.error(err)
