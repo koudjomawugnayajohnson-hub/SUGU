@@ -12,7 +12,8 @@ import {
   X,
   Bell,
   Search,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Accueil', href: '/dashboard', icon: Home },
   { name: 'Caisse', href: '/caisse', icon: ShoppingCart },
   { name: 'Produits', href: '/dashboard/products', icon: Package },
+  { name: 'Équipe', href: '/dashboard/cashiers', icon: Users },
   { name: 'Paramètres', href: '/dashboard/settings', icon: Settings },
 ]
 
