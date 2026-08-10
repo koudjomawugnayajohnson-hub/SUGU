@@ -12,8 +12,7 @@ type Product = {
   price: number
   acronym?: string
   color?: string
-  track_stock?: boolean
-  stock_quantity?: number
+  stock?: number
 }
 
 type CartItem = {
@@ -269,7 +268,7 @@ export default function PosPage() {
 
     // Vérification du stock
     const hasStockConflict = cart.some(item => 
-      item.product.track_stock && item.quantity > (item.product.stock_quantity || 0)
+      item.quantity > (item.product.stock || 0)
     )
 
     if (hasStockConflict && !isOverrideGranted) {
@@ -315,8 +314,8 @@ export default function PosPage() {
       // Mettre à jour le stock localement pour éviter de recharger la page
       setProducts(prevProducts => prevProducts.map(p => {
         const cartItem = cart.find(item => item.product.id === p.id)
-        if (cartItem && p.track_stock) {
-          return { ...p, stock_quantity: Math.max(0, (p.stock_quantity || 0) - cartItem.quantity) }
+        if (cartItem) {
+          return { ...p, stock: Math.max(0, (p.stock || 0) - cartItem.quantity) }
         }
         return p
       }))

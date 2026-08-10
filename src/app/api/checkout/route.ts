@@ -102,15 +102,15 @@ export async function POST(request: Request) {
     for (const item of cart) {
       const { data: productData, error: productError } = await supabaseAdmin
         .from('products')
-        .select('track_stock, stock_quantity')
+        .select('stock')
         .eq('id', item.product.id)
         .single()
 
-      if (!productError && productData?.track_stock) {
-        const newStock = Math.max(0, (productData.stock_quantity || 0) - item.quantity)
+      if (!productError && productData) {
+        const newStock = Math.max(0, (productData.stock || 0) - item.quantity)
         await supabaseAdmin
           .from('products')
-          .update({ stock_quantity: newStock })
+          .update({ stock: newStock })
           .eq('id', item.product.id)
       }
     }
