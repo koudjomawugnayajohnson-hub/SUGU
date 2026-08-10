@@ -252,7 +252,7 @@ export default function ProductsPage() {
                   required
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
                   placeholder="Ex: Coca-Cola 33cl"
                 />
               </div>
@@ -266,7 +266,7 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.price}
                     onChange={e => setFormData({...formData, price: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
                     placeholder="500"
                   />
                 </div>
@@ -278,7 +278,7 @@ export default function ProductsPage() {
                     min="0"
                     value={formData.stock}
                     onChange={e => setFormData({...formData, stock: e.target.value})}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all bg-gray-50 focus:bg-white"
                     placeholder="100"
                   />
                 </div>
