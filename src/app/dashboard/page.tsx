@@ -82,9 +82,8 @@ export default function DashboardPage() {
       }
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchData()
-  }, [])
+  }, [supabase])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + " F CFA"

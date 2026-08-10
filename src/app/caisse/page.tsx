@@ -267,6 +267,7 @@ export default function PosPage() {
 
   // 1. Charger depuis le localStorage au montage (côté client uniquement)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true)
     if (typeof window !== 'undefined') {
       const savedCart = localStorage.getItem('sugu_offline_cart')
@@ -327,7 +328,7 @@ export default function PosPage() {
       setIsAuthenticated(!!user)
     }
     checkAuth()
-  }, [])
+  }, [supabase.auth])
 
   // =========================================
   // LOGIQUE D'ENCAISSEMENT (CHECKOUT)
@@ -345,6 +346,7 @@ export default function PosPage() {
     // Vérifier l'authentification avant l'encaissement
     if (!isAuthenticated) {
       alert("⚠️ Vous devez être connecté pour encaisser. Redirection vers la page de connexion...")
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/login'
       return
     }

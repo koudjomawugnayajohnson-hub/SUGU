@@ -25,8 +25,6 @@ export default function CashiersPage() {
   const [role, setRole] = useState('CASHIER')
   const [error, setError] = useState('')
 
-  const supabase = createClient()
-
   const fetchCashiers = async () => {
     try {
       setIsLoading(true)
@@ -45,7 +43,7 @@ export default function CashiersPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/rules-of-hooks
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCashiers()
   }, [])
 

@@ -60,6 +60,7 @@ export default function ProductsPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkSessionAndFetch()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
