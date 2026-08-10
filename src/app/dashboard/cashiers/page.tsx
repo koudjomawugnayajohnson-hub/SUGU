@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
 import { Loader2, Plus, Trash2, UserPlus, Users, Search } from 'lucide-react'
 
 type Cashier = {

@@ -73,16 +73,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: newCashier })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur dans l\'API cashiers:', error)
     return NextResponse.json(
-      { error: error.message || 'Une erreur interne est survenue.' },
+      { error: error instanceof Error ? error.message : 'Une erreur interne est survenue.' },
       { status: 500 }
     )
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -118,9 +118,9 @@ export async function GET(request: Request) {
     if (error) throw error
 
     return NextResponse.json({ data })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur GET cashiers:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erreur interne' }, { status: 500 })
   }
 }
 
@@ -167,8 +167,8 @@ export async function DELETE(request: Request) {
     if (error) throw error
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur DELETE cashiers:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Erreur interne' }, { status: 500 })
   }
 }

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     // We use a secure Postgres RPC function to get the tenant_id based on the user's email.
     // This bypasses any RLS issues and doesn't rely on the JWT hook.
-    const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id')
+    const { data: tenantId } = await supabase.rpc('get_my_tenant_id')
 
     if (!tenantId) {
       return NextResponse.json(

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Get tenant ID using secure RPC
-    const { data: tenantId, error: tenantError } = await supabase.rpc('get_my_tenant_id')
+    const { data: tenantId } = await supabase.rpc('get_my_tenant_id')
     if (!tenantId) {
       return NextResponse.json({ error: "Aucun tenant associé à votre compte." }, { status: 403 })
     }

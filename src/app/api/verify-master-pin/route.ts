@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur verify-master-pin:', error)
     return NextResponse.json({ success: false, error: 'Erreur interne' }, { status: 500 })
   }

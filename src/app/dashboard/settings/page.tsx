@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Save, Store, MapPin, Phone, Percent, Loader2 } from "lucide-react"
-import { createClient } from "@/utils/supabase/client"
 
 export default function SettingsPage() {
   const [name, setName] = useState('')

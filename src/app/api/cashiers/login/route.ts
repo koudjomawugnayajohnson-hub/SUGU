@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       } 
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur cashiers login:', error)
     return NextResponse.json({ success: false, error: 'Erreur interne' }, { status: 500 })
   }

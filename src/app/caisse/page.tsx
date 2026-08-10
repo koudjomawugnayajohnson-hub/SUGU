@@ -157,7 +157,7 @@ export default function PosPage() {
           setOverrideError(false)
         }, 500)
       }
-    } catch (err) {
+    } catch {
       setOverrideError(true)
       setTimeout(() => {
         setOverridePin('')
@@ -204,7 +204,7 @@ export default function PosPage() {
       }
       setIsLocked(false)
       setPin('')
-    } catch (err) {
+    } catch {
       // Échec
       setPinError(true)
       setTimeout(() => {
