@@ -139,8 +139,17 @@ export default function CashiersPage() {
 
             <form onSubmit={handleAddCashier} className="space-y-4">
               {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
-                  {error}
+                <div className="p-4 bg-orange-50 text-orange-700 rounded-xl text-sm border border-orange-200 shadow-sm flex flex-col gap-3">
+                  <p className="font-medium">{error}</p>
+                  {error.includes('Plan Pro') && (
+                    <button 
+                      type="button" 
+                      onClick={() => alert('La page de facturation sera bientôt disponible !')}
+                      className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg self-start transition-colors shadow-sm"
+                    >
+                      Mettre à niveau mon plan
+                    </button>
+                  )}
                 </div>
               )}
 

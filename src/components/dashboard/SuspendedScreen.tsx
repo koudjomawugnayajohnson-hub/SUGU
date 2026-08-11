@@ -4,7 +4,12 @@ import { AlertTriangle, LogOut } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export default function SuspendedScreen() {
+interface SuspendedScreenProps {
+  title?: string
+  message?: string
+}
+
+export default function SuspendedScreen({ title, message }: SuspendedScreenProps = {}) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -19,9 +24,11 @@ export default function SuspendedScreen() {
         <div className="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <AlertTriangle size={32} />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-3">Accès Suspendu</h1>
+        <h1 className="text-2xl font-bold text-white mb-3">
+          {title || "Accès Suspendu"}
+        </h1>
         <p className="text-gray-300 mb-8 leading-relaxed">
-          Votre espace de travail a été suspendu ou votre période d'essai a expiré. Veuillez renouveler votre abonnement pour réactiver votre accès.
+          {message || "Votre espace de travail a été suspendu ou votre période d'essai a expiré. Veuillez renouveler votre abonnement pour réactiver votre accès."}
         </p>
         
         <button 

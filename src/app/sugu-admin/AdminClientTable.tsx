@@ -9,6 +9,7 @@ type Tenant = {
   contact_email: string
   phone: string
   status: string
+  plan?: string
   created_at: string
 }
 
@@ -33,6 +34,33 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
       if (res.ok) {
         // Mettre à jour l'état local
         setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, status: newStatus } : t))
+      } else {
+        alert(data.error || "Une erreur est survenue")
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Erreur de connexion.")
+    } finally {
+      setIsUpdating(null)
+    }
+  }
+
+  const handlePlanChange = async (tenantId: string, newPlan: string) => {
+    if (!window.confirm(`Confirmez-vous le passage au plan ${newPlan.toUpperCase()} ?`)) return
+
+    setIsUpdating(tenantId)
+
+    try {
+      const res = await fetch('/api/admin/update-tenant-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant_id: tenantId, plan: newPlan })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, plan: newPlan } : t))
       } else {
         alert(data.error || "Une erreur est survenue")
       }
@@ -75,6 +103,7 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
             <th className="px-6 py-4 font-medium">Boutique</th>
             <th className="px-6 py-4 font-medium">Contact</th>
             <th className="px-6 py-4 font-medium">Création</th>
+            <th className="px-6 py-4 font-medium">Plan</th>
             <th className="px-6 py-4 font-medium">Statut</th>
             <th className="px-6 py-4 font-medium text-right">Actions</th>
           </tr>
@@ -94,6 +123,17 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
                 {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
               </td>
               <td className="px-6 py-4">
+                {tenant.plan === 'pro' ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800">
+                    PRO
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                    FREE
+                  </span>
+                )}
+              </td>
+              <td className="px-6 py-4">
                 {getStatusBadge(tenant.status)}
               </td>
               <td className="px-6 py-4 text-right">
@@ -101,16 +141,33 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
                   {isUpdating === tenant.id ? (
                     <Loader2 className="animate-spin text-gray-400" size={20} />
                   ) : (
-                    <select 
-                      value={tenant.status}
-                      onChange={(e) => handleStatusChange(tenant.id, e.target.value)}
-                      className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent font-medium cursor-pointer"
-                    >
-                      <option value="ACTIVE">Activer (Active)</option>
-                      <option value="SUSPENDED">Bloquer (Suspended)</option>
-                      <option value="TRIAL">Essai (Trial)</option>
-                      <option value="EXPIRED">Expirer (Expired)</option>
-                    </select>
+                    <>
+                      {tenant.plan !== 'pro' ? (
+                        <button
+                          onClick={() => handlePlanChange(tenant.id, 'pro')}
+                          className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+                        >
+                          Passer en PRO
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handlePlanChange(tenant.id, 'free')}
+                          className="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium"
+                        >
+                          Passer en FREE
+                        </button>
+                      )}
+                      <select 
+                        value={tenant.status}
+                        onChange={(e) => handleStatusChange(tenant.id, e.target.value)}
+                        className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent font-medium cursor-pointer"
+                      >
+                        <option value="ACTIVE">Activer (Active)</option>
+                        <option value="SUSPENDED">Bloquer (Suspended)</option>
+                        <option value="TRIAL">Essai (Trial)</option>
+                        <option value="EXPIRED">Expirer (Expired)</option>
+                      </select>
+                    </>
                   )}
                 </div>
               </td>

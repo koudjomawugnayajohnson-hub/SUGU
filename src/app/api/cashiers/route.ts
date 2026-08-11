@@ -54,6 +54,28 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Vérification de la limite du plan Freemium
+    const { data: tenantData } = await supabaseAdmin
+      .from('tenants')
+      .select('plan')
+      .eq('id', tenantId)
+      .single()
+
+    if (tenantData?.plan === 'free') {
+      const { count } = await supabaseAdmin
+        .from('cashiers')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('role', 'CASHIER')
+
+      if (count !== null && count >= 1) {
+        return NextResponse.json(
+          { error: 'Limite atteinte. Le plan gratuit est restreint à 1 seul caissier. Passez au Plan Pro pour ajouter une équipe complète.' },
+          { status: 403 }
+        )
+      }
+    }
+
     const { data: newCashier, error: insertError } = await supabaseAdmin
       .from('cashiers')
       .insert([

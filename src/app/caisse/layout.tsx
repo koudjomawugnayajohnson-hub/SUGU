@@ -22,12 +22,25 @@ export default async function CaisseLayout({
   if (tenantId) {
     const { data: tenant } = await supabase
       .from('tenants')
-      .select('status')
+      .select('status, trial_ends_at')
       .eq('id', tenantId)
       .single()
       
-    if (tenant?.status === 'SUSPENDED' || tenant?.status === 'EXPIRED') {
-      return <SuspendedScreen />
+    if (tenant) {
+      const isTrialExpired = tenant.status === 'TRIAL' && new Date() > new Date(tenant.trial_ends_at);
+      
+      if (isTrialExpired) {
+        return (
+          <SuspendedScreen 
+            title="Essai Terminé" 
+            message="Votre période d'essai de 14 jours est terminée. Veuillez passer au Plan Pro pour continuer à utiliser SUGU." 
+          />
+        )
+      }
+
+      if (tenant.status === 'SUSPENDED' || tenant.status === 'EXPIRED') {
+        return <SuspendedScreen />
+      }
     }
   }
 
