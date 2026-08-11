@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react'
+import { CheckCircle, XCircle, Loader2, RefreshCw, Trash2 } from 'lucide-react'
 
 type Tenant = {
   id: string
@@ -63,6 +63,33 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
         setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, plan: newPlan } : t))
       } else {
         alert(data.error || "Une erreur est survenue")
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Erreur de connexion.")
+    } finally {
+      setIsUpdating(null)
+    }
+  }
+
+  const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir SUPPRIMER DÉFINITIVEMENT le compte "${tenantName}" ? Cette action est irréversible et supprimera toutes les données associées.`)) return
+
+    setIsUpdating(tenantId)
+
+    try {
+      const res = await fetch('/api/admin/delete-tenant', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant_id: tenantId })
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setTenants(prev => prev.filter(t => t.id !== tenantId))
+      } else {
+        alert(data.error || "Une erreur est survenue lors de la suppression.")
       }
     } catch (err) {
       console.error(err)
@@ -167,6 +194,13 @@ export default function AdminClientTable({ initialTenants }: { initialTenants: T
                         <option value="TRIAL">Essai (Trial)</option>
                         <option value="EXPIRED">Expirer (Expired)</option>
                       </select>
+                      <button
+                        onClick={() => handleDeleteTenant(tenant.id, tenant.name || 'Boutique sans nom')}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Supprimer ce compte"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </>
                   )}
                 </div>

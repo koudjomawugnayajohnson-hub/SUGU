@@ -17,14 +17,25 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // Vérification du statut de l'abonnement
-  const { data: tenantId } = await supabase.rpc('get_my_tenant_id')
+  // Utilisation de l'Admin Client pour contourner RLS et garantir la lecture du statut
+  const { createClient: createAdminClient } = await import('@supabase/supabase-js')
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  // 1. Trouver le tenant_id de l'utilisateur
+  const { data: dbUser } = await supabaseAdmin
+    .from('users')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
   
-  if (tenantId) {
-    const { data: tenant } = await supabase
+  if (dbUser?.tenant_id) {
+    const { data: tenant } = await supabaseAdmin
       .from('tenants')
       .select('status, trial_ends_at')
-      .eq('id', tenantId)
+      .eq('id', dbUser.tenant_id)
       .single()
       
     if (tenant) {
